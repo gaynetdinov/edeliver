@@ -95,7 +95,7 @@ __load_app_config() {
     source "$APP_CONFIG"
     if [[ -n "$HOST" ]]; then
         [[ "$HOST" = *"@"* ]] && BUILD_USER=${HOST%%@*} && STAGING_USER=${HOST%%@*} && PRODUCTION_USER=${HOST%%@*} && HOST=${HOST##*@}
-        SERVER="$HOST" && STAGING_HOSTS="$HOST" && PRODUCTION_HOSTS="$HOST" && BUILD_HOST="$HOST"
+        SERVER="$HOST" && STAGING_HOSTS="$HOST" && PRODUCTION_HOSTS="$HOST" && BUILD_HOST="$HOST" && PORT="$PORT"
     fi
   fi
 }
@@ -282,7 +282,7 @@ __remote() {
 
   for _host in $_hosts
   do
-    ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job $SILENCE" &
+    ssh -p "$PORT" -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job $SILENCE" &
     background_jobs_pids+=("$!")
     local _background_job="ssh -o ConnectTimeout=$SSH_TIMEOUT $_host $_remote_job $SILENCE"
     background_jobs+=("$_background_job")
@@ -301,10 +301,10 @@ __sync_remote() {
   [[ $(wc -w <<< "$_hosts") -gt 1 ]] && error "Sync commands can be executed on one host only, but serveral hosts are configured ($_hosts)."
   local _host="$_hosts"
   if [[ "$VERBOSE" = "true" ]]; then
-    ssh -t -q -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" || error "\nFAILED $?:\n${_remote_job}\n"
+    ssh -p "$PORT" -t -q -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" || error "\nFAILED $?:\n${_remote_job}\n"
   else
     local _output _status
-    _output=$(ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" 2>&1)
+    _output=$(ssh -p "$PORT" -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" 2>&1)
     _status=$?
     [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nFAILED $_status:\n${_remote_job}\n"
   fi

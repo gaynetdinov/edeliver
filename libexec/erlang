@@ -315,7 +315,7 @@ copy_release_to_release_store() {
       fi
       exit
     "
-    ssh -A -o ConnectTimeout="$SSH_TIMEOUT" "$_build_hosts" "$_remote_job $SILENCE" || \
+    ssh -p "$PORT" -A -o ConnectTimeout="$SSH_TIMEOUT" "$_build_hosts" "$_remote_job $SILENCE" || \
       error "Copying release file failed\n  source: $_release_file on $_build_hosts\n  destination: $_dest_file_name on $_release_store_host"
   else
     error_message "Cannot copy releases to store for store type ${RELEASE_STORE_TYPE}"; exit 2
@@ -363,7 +363,7 @@ get_relup_content_from_upgrade() {
       tar -Oxzf \"$_release_file\" releases/${_release_version}/relup
       exit
     "
-    ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE"
+    ssh -p "$PORT" -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE"
   elif [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     local _local_tmp_dir=$(mktemp -d "${LOCAL_RELEASE_STORE}/.tmp/${_release_file}.XXXXXX")
     download_file_from_s3_release_store "$_release_file" "${_local_tmp_dir}/${_release_file}"
@@ -641,7 +641,7 @@ __get_releases_in_store() {
       ls -1 ${APP}_*.${_release_type}.tar.gz
       exit
     "
-    ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE"
+    ssh -p "$PORT" -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE"
   else
     error_message "Cannot detect releases in store for store type ${RELEASE_STORE_TYPE}"; exit 2
   fi
@@ -694,8 +694,8 @@ upload_release_archive() {
           mkdir -p \"${_destination_directory}\"
           cp $_release_file $_dest_file_name &
         else
-          ssh \"$_host\" \"mkdir -p \\\"${_destination_directory}\\\" \"
-          cat $_release_file | ssh \"$_host\" \"cat > $_dest_file_name\" &
+          ssh -p \"$PORT\" \"$_host\" \"mkdir -p \\\"${_destination_directory}\\\" \"
+          cat $_release_file | ssh -p \"$PORT\" \"$_host\" \"cat > $_dest_file_name\" &
         fi
         background_jobs_pids+=(\"\$!\")
       "
@@ -708,7 +708,7 @@ upload_release_archive() {
       done
       exit
     "
-    ssh -A -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE" || \
+    ssh -p "$PORT" -A -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE" || \
       error "Uploading release file failed\n  source: ${_release_store_path%%/}/${_release_file} on $_release_store_host\n  destination: $_dest_file_name on deploy hosts"
   else
     error_message "Cannot upload release for store type ${RELEASE_STORE_TYPE}"; exit 2
@@ -1204,7 +1204,7 @@ __remote_md5() {
         echo \"\"
     fi
   "
-  ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_remote_host" "$_remote_job"
+  ssh -p "$PORT" -o ConnectTimeout="$SSH_TIMEOUT" "$_remote_host" "$_remote_job"
 }
 
 begin() {

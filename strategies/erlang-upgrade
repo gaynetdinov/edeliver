@@ -207,7 +207,7 @@ __execute_on_deploy_host() {
   local _host="$1"
   local _command="$2"
 
-  ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "
+  ssh -p "$PORT" -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO/$APP $SILENCE
